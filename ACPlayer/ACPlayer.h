@@ -18,6 +18,9 @@ public:
     ~ACPlayer();
 
 private slots:
+    void durationChanged(qint64 duration);
+    void positionChanged(qint64 duration);
+
     void on_actionOpenTriggered();
     void on_playToggled();
     void on_nextPressed();
@@ -34,5 +37,7 @@ private:
     qint64 mDuration;
     bool Is_Paused = true;
     bool Is_Muted = false;
+
+    void updateDuration(qint64 duration);
 };
 
