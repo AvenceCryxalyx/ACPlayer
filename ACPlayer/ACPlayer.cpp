@@ -172,9 +172,14 @@ void ACPlayer::durationChanged(qint64 duration)
     QString Format = "hh:mm:ss";
     if (mDuration <= 3600) Format = "mm:ss";
 
-    QTime TotalTime((mDuration / 3600) % 60, (mDuration / 60) % 60, (mDuration * 1000) % 1000);
+    int hours = (mDuration / 3600);
+    int minutes = (mDuration / 60) % 60;
+    int seconds = (mDuration % 1000) % 60;
+
+    QTime TotalTime(hours, minutes, seconds);
     ui.label_time_left->setText(TotalTime.toString(Format));
 }
+
 void ACPlayer::positionChanged(qint64 duration)
 {
     if (!ui.slider_progress->isSliderDown())
