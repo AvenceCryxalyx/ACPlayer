@@ -6,6 +6,7 @@ ACPlayer::ACPlayer(QWidget *parent)
     ui.setupUi(this);
 
     Player = new QMediaPlayer();
+
     audio = new QAudioOutput();
     Player->setAudioOutput(audio);
     
@@ -22,7 +23,7 @@ ACPlayer::ACPlayer(QWidget *parent)
     ui.pushButton_Mute->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
     
     
-
+    connect(Player, SIGNAL(mediaStatusChanged(QMediaPlayer::MediaStatus)), this, SLOT(ChangedStatus(QMediaPlayer::MediaStatus)));
     connect(ui.actionOpen, &QAction::triggered, this, &ACPlayer::on_actionOpenTriggered);
     connect(ui.pushButton_Play, &QPushButton::clicked, this, &ACPlayer::on_playToggled);
     connect(ui.pushButton_Next, &QPushButton::clicked, this, &ACPlayer::on_nextPressed);
@@ -34,7 +35,6 @@ ACPlayer::ACPlayer(QWidget *parent)
 
     connect(Player, &QMediaPlayer::durationChanged, this, &ACPlayer::durationChanged);
     connect(Player, &QMediaPlayer::positionChanged, this, &ACPlayer::positionChanged);
-
     ui.slider_progress->setRange(0, Player->duration() / 1000);
 }
 
@@ -42,6 +42,16 @@ ACPlayer::~ACPlayer()
 {
 
 }
+
+//void ACPlayer::initialize()
+//{
+//    QStringList pars = QApplication::arguments();
+//    if (pars.count() > 1)
+//    {
+//        QString filePath = QFileInfo(pars[1]).absoluteFilePath();
+//        PlayVideo(&filePath);
+//    }
+//}
 
 void ACPlayer::on_muteToggled()
 {
@@ -102,22 +112,40 @@ void ACPlayer::on_hSlider_Progress_valueChanged(int value)
     Player->setPosition(value * 1000);
 }
 
-void ACPlayer::on_actionOpenTriggered()
+void ACPlayer::OpenWithFile(QString* fileName)
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Select Video File"), "", tr("MP4 Files (*.mp4)"));
+    //QMessageBox::warning(this, "File Path", *fileName, QMessageBox::StandardButton::Close);
+    //PlayVideo(fileName);
+}
 
-    Video = new QVideoWidget();
-
-    Video->setGeometry(5, 5, ui.groupBox_Video->width() - 10, ui.groupBox_Video->height() - 10);
-    Video->setParent(ui.groupBox_Video);
-
-    Player->setVideoOutput(Video);
-
-    Player->setSource(QUrl(fileName));
-
+void ACPlayer::PlayVideo(QString* fileName)
+{
+    if (!Video)
+    {
+        Video = new QVideoWidget();
+        Video->setGeometry(5, 5, ui.groupBox_Video->width() - 10, ui.groupBox_Video->height() - 10);
+        Video->setParent(ui.groupBox_Video);
+        Player->setVideoOutput(Video);
+    }
+    else
+    {
+        Player->stop();
+    }
+    Player->setSource(QUrl(*fileName));
     Video->setVisible(true);
 
-    Video->show();
+    //while (Player->mediaStatus() != QMediaPlayer::MediaStatus::LoadedMedia)
+    //{//
+    //}
+
+    Player->play();
+}
+
+void ACPlayer::on_actionOpenTriggered()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Select Video File"), "", tr("MP4 Files (*.mp4 *.avi *.mkv *.mov *.flv *.wmv *.webm)"));
+
+    PlayVideo(&fileName);
 }
 
 void ACPlayer::durationChanged(qint64 duration)
@@ -146,4 +174,15 @@ void ACPlayer::updateDuration(qint64 duration)
         ui.label_time_elapsed->setText(CurrentTime.toString(Format));
         ui.label_time_left->setText(TotalTime.toString(Format));
     }
+}
+
+void ACPlayer::ChangedStatus(QMediaPlayer::MediaStatus status)
+{
+    //QString message = QString::fromStdString(std::to_string(status));
+    //QMessageBox::warning(this, "Status", message, QMessageBox::StandardButton::Close);
+}
+
+void ACPlayer::MediaError(QMediaPlayer::Error error)
+{
+
 }

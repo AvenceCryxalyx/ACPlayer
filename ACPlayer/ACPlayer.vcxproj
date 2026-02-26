@@ -39,10 +39,13 @@
     <QtInstall>6.9.1_msvc2022_64</QtInstall>
     <QtModules>core;gui;widgets;multimedia;multimediawidgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
+    <QtPlugin>true</QtPlugin>
+    <QtQMLDebugEnable>false</QtQMLDebugEnable>
+    <QtOptionsBuildLog>true</QtOptionsBuildLog>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>6.9.1_msvc2022_64</QtInstall>
-    <QtModules>core;gui;widgets</QtModules>
+    <QtModules>core;gui;widgets;multimedia;multimediawidgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
@@ -67,6 +70,11 @@
     <ClCompile>
       <TranslateIncludes>false</TranslateIncludes>
     </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PostBuildEvent>
+      <Command>"$(QTDIR)\bin\windeployqt.exe" "$(OutDir.TrimEnd('\'))"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
@@ -101,9 +109,13 @@
     <QtUic Include="ACPlayer.ui" />
     <QtMoc Include="ACPlayer.h" />
     <ClCompile Include="ACPlayer.cpp" />
+    <ClCompile Include="LogEntry.cpp" />
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="LogEntry.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="x64\Debug\qt\uic\ui_ACPlayer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

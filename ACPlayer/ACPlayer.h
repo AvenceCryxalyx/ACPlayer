@@ -1,10 +1,9 @@
 #pragma once
 
 #include <QtWidgets>
-//#include <QtMultimedia/qmediaplayer.h>
-//#include <QtMultimediaWidgets/qvideowidget.h>
+#include <QtMultimediaWidgets/qvideowidget.h>
+#include <QMediaPlayer>
 #include <QtMultimediaWidgets>
-#include <QtMultimedia>
 #include <QtCore>
 #include <QtGui>
 #include "ui_ACPlayer.h"
@@ -16,11 +15,11 @@ class ACPlayer : public QMainWindow
 public:
     ACPlayer(QWidget *parent = nullptr);
     ~ACPlayer();
-
+    void OpenWithFile(QString* fileName);
+    void PlayVideo(QString* fileName);
 private slots:
     void durationChanged(qint64 duration);
     void positionChanged(qint64 duration);
-
     void on_actionOpenTriggered();
     void on_playToggled();
     void on_nextPressed();
@@ -29,6 +28,16 @@ private slots:
     void on_muteToggled();
     void on_hSlider_Volume_valueChanged(int value);
     void on_hSlider_Progress_valueChanged(int value);
+    //void initialize();
+    void HandleStatusChange(QMediaPlayer::MediaStatus Status) {
+        emit statusChanged(Status); // Redirect so that the main application can handle this signal too
+    }
+
+signals:
+    void statusChanged(QMediaPlayer::MediaStatus);
+public slots:
+    void ChangedStatus(QMediaPlayer::MediaStatus);
+    void MediaError(QMediaPlayer::Error);
 private:
     Ui::ACPlayerClass ui;
     QMediaPlayer* Player;
