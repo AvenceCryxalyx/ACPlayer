@@ -35,7 +35,7 @@
      <rect>
       <x>30</x>
       <y>770</y>
-      <width>51</width>
+      <width>70</width>
       <height>41</height>
      </rect>
     </property>
@@ -200,9 +200,9 @@
    <widget class="QPushButton" name="pushButton_Play">
     <property name="geometry">
      <rect>
-      <x>90</x>
+      <x>110</x>
       <y>770</y>
-      <width>51</width>
+      <width>70</width>
       <height>41</height>
      </rect>
     </property>
@@ -210,7 +210,7 @@
      <string>Play</string>
     </property>
     <property name="checkable">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
     <property name="checked">
      <bool>false</bool>
@@ -228,22 +228,25 @@
    <widget class="QPushButton" name="pushButton_Stop">
     <property name="geometry">
      <rect>
-      <x>150</x>
+      <x>190</x>
       <y>770</y>
-      <width>51</width>
+      <width>70</width>
       <height>41</height>
      </rect>
     </property>
     <property name="text">
      <string>Stop</string>
     </property>
+    <property name="checkable">
+     <bool>false</bool>
+    </property>
    </widget>
    <widget class="QPushButton" name="pushButton_Next">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>270</x>
       <y>770</y>
-      <width>51</width>
+      <width>70</width>
       <height>41</height>
      </rect>
     </property>
@@ -268,10 +271,15 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>740</y>
+      <y>730</y>
       <width>71</width>
-      <height>21</height>
+      <height>31</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
     </property>
     <property name="layoutDirection">
      <enum>Qt::LayoutDirection::LeftToRight</enum>
@@ -287,10 +295,15 @@
     <property name="geometry">
      <rect>
       <x>1360</x>
-      <y>740</y>
+      <y>730</y>
       <width>71</width>
-      <height>21</height>
+      <height>31</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
     </property>
     <property name="layoutDirection">
      <enum>Qt::LayoutDirection::LeftToRight</enum>
