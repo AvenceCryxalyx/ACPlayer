@@ -47,7 +47,7 @@ private:
     qint64 mDuration;
     bool Is_Paused = true;
     bool Is_Muted = false;
-
+    void resizeEvent(QResizeEvent* event) override;
     void updateProgressPosition(qint64 duration);
 
     const int millisecondsPerSecond = 1000;

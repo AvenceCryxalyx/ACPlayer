@@ -14,7 +14,7 @@ ACPlayer::ACPlayer(QWidget *parent)
     if (!Video)
     {
         Video = new QVideoWidget();
-        Video->setGeometry(5, 5, ui.groupBox_Video->width() - 10, ui.groupBox_Video->height() - 10);
+        Video->setGeometry(0, 0, ui.groupBox_Video->height(), ui.groupBox_Video->width());
         Video->setParent(ui.groupBox_Video);
     }
     Player->setAudioOutput(audio);
@@ -188,6 +188,12 @@ void ACPlayer::positionChanged(qint64 duration)
         ui.slider_progress->setValue(duration/1000);
         ui.slider_progress->blockSignals(false);
     }
+}
+
+void ACPlayer::resizeEvent(QResizeEvent* event)
+{
+    Video->resize(ui.groupBox_Video->width(), ui.groupBox_Video->height());
+    Video->updateGeometry();
 }
 
 void ACPlayer::updateProgressPosition(qint64 duration)
