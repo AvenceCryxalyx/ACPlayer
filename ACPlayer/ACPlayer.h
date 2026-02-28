@@ -29,7 +29,8 @@ private slots:
     void on_hSlider_Volume_valueChanged(int value);
     void on_hSlider_Progress_valueChanged(int value);
     void on_QPlayer_durationChanged(qint64 position);
-    //void initialize();
+    void on_metaChanged();
+    void initialize();
     void HandleStatusChange(QMediaPlayer::MediaStatus Status) {
         emit statusChanged(Status); // Redirect so that the main application can handle this signal too
     }
@@ -42,8 +43,10 @@ public slots:
 private:
     Ui::ACPlayerClass ui;
     QMediaPlayer* Player;
-    QVideoWidget* Video;
-    QAudioOutput* audio;
+    QGraphicsView* view;
+    QGraphicsScene* scene;
+    QGraphicsVideoItem* Video;
+    QAudioOutput* Audio;
     qint64 mDuration;
     bool Is_Paused = true;
     bool Is_Muted = false;

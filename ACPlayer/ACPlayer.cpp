@@ -6,25 +6,6 @@ ACPlayer::ACPlayer(QWidget *parent)
     ui.setupUi(this);
 
     Player = new QMediaPlayer();
-    if (!audio)
-    {
-        audio = new QAudioOutput();
-    }
-    
-    if (!Video)
-    {
-        Video = new QVideoWidget();
-        Video->setGeometry(0, 0, ui.groupBox_Video->height(), ui.groupBox_Video->width());
-        Video->setParent(ui.groupBox_Video);
-    }
-    Player->setAudioOutput(audio);
-    Player->setVideoOutput(Video);
-
-    ui.slider_volume->setMinimum(0);
-    ui.slider_volume->setMaximum(100);
-    ui.slider_volume->setValue(50);
-    Player->audioOutput()->setVolume(ui.slider_volume->value());
-
     
     ui.pushButton_Play->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
     ui.pushButton_Stop->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
@@ -45,7 +26,9 @@ ACPlayer::ACPlayer(QWidget *parent)
     connect(Player, &QMediaPlayer::durationChanged, this, &ACPlayer::durationChanged);
     connect(Player, &QMediaPlayer::positionChanged, this, &ACPlayer::positionChanged);
     connect(Player, &QMediaPlayer::positionChanged, this, &ACPlayer::updateProgressPosition);
+    connect(Player, & QMediaPlayer::metaDataChanged, this, &ACPlayer::on_metaChanged);
     ui.slider_progress->setRange(0, Player->duration() / 1000);
+    
 }
 
 ACPlayer::~ACPlayer()
@@ -53,15 +36,57 @@ ACPlayer::~ACPlayer()
 
 }
 
-//void ACPlayer::initialize()
-//{
-//    QStringList pars = QApplication::arguments();
-//    if (pars.count() > 1)
-//    {
-//        QString filePath = QFileInfo(pars[1]).absoluteFilePath();
-//        PlayVideo(&filePath);
-//    }
-//}
+void ACPlayer::on_metaChanged()
+{
+    QMediaMetaData metaData = Player->metaData();
+    QSize resolution = metaData.value(QMediaMetaData::Resolution).toSize();
+    if (resolution.height() > resolution.width()) {
+        Video->setRotation(90);
+    }
+    else
+    {
+        Video->setRotation(0);
+    }
+}
+
+void ACPlayer::initialize()
+{
+    if (!Audio)
+    {
+        Audio = new QAudioOutput();
+        Player->setAudioOutput(Audio);
+        ui.slider_volume->setMinimum(0);
+        ui.slider_volume->setMaximum(100);
+        ui.slider_volume->setValue(50);
+        Player->audioOutput()->setVolume(ui.slider_volume->value());
+    }
+
+    if (!Video)
+    {
+        Video = new QGraphicsVideoItem();
+        Video->setPos(0, 0);
+        
+        scene = new QGraphicsScene(ui.groupBox_Video);
+        QRectF bounds = ui.groupBox_Video->contentsRect();
+        scene->setSceneRect(bounds);
+        view = new QGraphicsView(scene, ui.groupBox_Video);
+        view->setGeometry(0, 0, ui.groupBox_Video->width(), ui.groupBox_Video->height());
+        view->updateGeometry();
+        view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        view->scene()->addItem(Video);
+        Video->setSize(view->size());
+        view->show();
+        Player->setVideoOutput(Video);
+    }
+
+    QStringList pars = QApplication::arguments();
+    if (pars.count() > 1)
+    {
+        QString filePath = QFileInfo(pars[1]).absoluteFilePath();
+        PlayVideo(&filePath);
+    }
+}
 
 void ACPlayer::on_muteToggled()
 {
@@ -76,7 +101,7 @@ void ACPlayer::on_muteToggled()
         ui.pushButton_Mute->setIcon(style()->standardIcon(QStyle::SP_MediaVolumeMuted));
     }
 
-    audio->setMuted(Is_Muted);
+    Audio->setMuted(Is_Muted);
 }
 
 
@@ -126,7 +151,7 @@ void ACPlayer::on_stopPressed()
 void ACPlayer::on_hSlider_Volume_valueChanged(int value)
 {
     float newValue = (float)value / 100;
-    audio->setVolume(newValue);
+    Audio->setVolume(newValue);
 }
 
 void ACPlayer::on_QPlayer_durationChanged(qint64 position)
@@ -147,19 +172,24 @@ void ACPlayer::OpenWithFile(QString* fileName)
 
 void ACPlayer::PlayVideo(QString* fileName)
 {
+
     if(Player->isPlaying())
     {
         Player->stop();
     }
     Player->setSource(QUrl(*fileName));
-    Video->setVisible(true);
-
+    QSize newSize = QSize(ui.groupBox_Video->width(), ui.groupBox_Video->height());
+    QRectF bounds = ui.groupBox_Video->contentsRect();
+    scene->setSceneRect(bounds);
+    Video->setAspectRatioMode(Qt::KeepAspectRatio);
+    view->fitInView(scene->sceneRect());
+    view->resize(newSize);
     on_playToggled();
 }
 
 void ACPlayer::on_actionOpenTriggered()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Select Video File"), "", tr("MP4 Files (*.mp4 *.avi *.mkv *.mov *.flv *.wmv *.webm)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Select Video File"), "", tr("MP4 Files (*.mp4 *.avi *.mkv *.mov *.flv *.wmv *.webm *.mov)"));
 
     PlayVideo(&fileName);
 }
@@ -192,8 +222,15 @@ void ACPlayer::positionChanged(qint64 duration)
 
 void ACPlayer::resizeEvent(QResizeEvent* event)
 {
-    Video->resize(ui.groupBox_Video->width(), ui.groupBox_Video->height());
-    Video->updateGeometry();
+    if (Video)
+    {
+        QSize newSize = QSize(ui.groupBox_Video->width(), ui.groupBox_Video->height());
+        QRectF bounds = ui.groupBox_Video->contentsRect();
+        scene->setSceneRect(bounds);
+        view->resize(newSize);
+        view->fitInView(scene->sceneRect());
+        Video->setSize(newSize);
+    }
 }
 
 void ACPlayer::updateProgressPosition(qint64 duration)

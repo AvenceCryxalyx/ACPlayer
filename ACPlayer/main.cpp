@@ -73,15 +73,11 @@ int main(int argc, char *argv[])
     registerFileAssociation(".mkv", "ac_player", "mkv registration for my app");
     registerFileAssociation(".mp4", "ac_player", "mp4 registration for my app");
     registerFileAssociation(".avi", "ac_player", "avi registration for my app");
+    registerFileAssociation(".mov", "ac_player", "mov registration for my app");
     ACPlayer window;
     window.show();
 
-    //QTimer::singleShot(500, &window, SLOT(initialize()));
+    QTimer::singleShot(200, &window, SLOT(initialize()));
 
-    if (argc > 1)
-    {
-        QString filePath = QFileInfo(QString::fromLocal8Bit(argv[1])).absoluteFilePath();
-        window.PlayVideo(&filePath);
-    }
     return app.exec();
 }
