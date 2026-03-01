@@ -43,7 +43,7 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
-    <QtInstall>6.9.1_msvc2022_64</QtInstall>
+    <QtInstall>6.8.3 win7/8 support</QtInstall>
     <QtModules>core;gui;widgets;multimedia;multimediawidgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
     <QtPlugin>true</QtPlugin>
@@ -51,7 +51,7 @@
     <QtOptionsBuildLog>true</QtOptionsBuildLog>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
-    <QtInstall>6.9.1_msvc2022_64</QtInstall>
+    <QtInstall>6.8.3 win7/8 support</QtInstall>
     <QtModules>core;gui;widgets;multimedia;multimediawidgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
@@ -77,6 +77,12 @@
     <ClCompile>
       <TranslateIncludes>false</TranslateIncludes>
     </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>D:\Qt\6.8.3\qt-6.8.3-install\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>"$(QTDIR)\bin\windeployqt.exe" "$(OutDir.TrimEnd('\'))"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PostBuildEvent>
