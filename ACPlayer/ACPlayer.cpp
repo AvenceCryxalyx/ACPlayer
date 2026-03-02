@@ -26,7 +26,9 @@ ACPlayer::ACPlayer(QWidget *parent)
     connect(Player, &QMediaPlayer::durationChanged, this, &ACPlayer::durationChanged);
     connect(Player, &QMediaPlayer::positionChanged, this, &ACPlayer::positionChanged);
     connect(Player, &QMediaPlayer::positionChanged, this, &ACPlayer::updateProgressPosition);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     connect(Player, & QMediaPlayer::metaDataChanged, this, &ACPlayer::on_metaChanged);
+#endif
     ui.slider_progress->setRange(0, Player->duration() / 1000);
     
 }
@@ -38,6 +40,7 @@ ACPlayer::~ACPlayer()
 
 void ACPlayer::on_metaChanged()
 {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     QMediaMetaData metaData = Player->metaData();
     QSize resolution = metaData.value(QMediaMetaData::Resolution).toSize();
     if (resolution.height() > resolution.width()) {
@@ -47,10 +50,13 @@ void ACPlayer::on_metaChanged()
     {
         Video->setRotation(0);
     }
+#endif
+
 }
 
 void ACPlayer::initialize()
 {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     if (!Audio)
     {
         Audio = new QAudioOutput();
@@ -60,6 +66,7 @@ void ACPlayer::initialize()
         ui.slider_volume->setValue(50);
         Player->audioOutput()->setVolume(ui.slider_volume->value());
     }
+#endif
 
     if (!Video)
     {
@@ -100,8 +107,14 @@ void ACPlayer::on_muteToggled()
         Is_Muted = true;
         ui.pushButton_Mute->setIcon(style()->standardIcon(QStyle::SP_MediaVolumeMuted));
     }
-
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     Audio->setMuted(Is_Muted);
+#elif QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    Player->setMuted(Is_Muted);
+#else
+
+#endif
+
 }
 
 
@@ -129,8 +142,11 @@ void ACPlayer::on_playToggled()
         ui.pushButton_Play->setText("Play");
         Player->pause();
     }
-
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     Is_Paused = !Player->isPlaying();
+#elif QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    Is_Paused = Player->state() == QMediaPlayer::PlayingState;
+#endif
 }
 
 void ACPlayer::on_nextPressed()
@@ -172,12 +188,19 @@ void ACPlayer::OpenWithFile(QString* fileName)
 
 void ACPlayer::PlayVideo(QString* fileName)
 {
-
-    if(Player->isPlaying())
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    if (Player->isPlaying())
     {
         Player->stop();
     }
     Player->setSource(QUrl(*fileName));
+    Player->setSource(QUrl(*fileName));
+#elif QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    if (Player->state() == QMediaPlayer::PlayingState)
+    {
+        Player->stop();
+    }Player->setMedia(QUrl(*fileName));
+#endif
     QSize newSize = QSize(ui.groupBox_Video->width(), ui.groupBox_Video->height());
     QRectF bounds = ui.groupBox_Video->contentsRect();
     scene->setSceneRect(bounds);
