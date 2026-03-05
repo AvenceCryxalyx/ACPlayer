@@ -5,8 +5,16 @@
       <Configuration>All</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug_QT5|x64">
+      <Configuration>Debug_QT5</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_QT5|x64">
+      <Configuration>Release_QT5</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
@@ -18,11 +26,18 @@
     <ProjectGuid>{FE7BB4E4-4807-412D-B747-244C546EE894}</ProjectGuid>
     <Keyword>QtVS_v304</Keyword>
     <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)'=='Debug_QT5|x64'">10.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0</WindowsTargetPlatformVersion>
     <QtMsBuild Condition="'$(QtMsBuild)'=='' OR !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_QT5|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v143</PlatformToolset>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -38,12 +53,23 @@
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='All|x64'">
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release_QT5|x64'">
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
-    <QtInstall>6.8.3 win7/8 support</QtInstall>
+    <QtInstall>6.9.1_msvc2022_64</QtInstall>
+    <QtModules>core;gui;widgets;multimedia;multimediawidgets</QtModules>
+    <QtBuildConfig>debug</QtBuildConfig>
+    <QtPlugin>true</QtPlugin>
+    <QtQMLDebugEnable>false</QtQMLDebugEnable>
+    <QtOptionsBuildLog>true</QtOptionsBuildLog>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_QT5|x64'" Label="QtSettings">
+    <QtInstall>5.15 LTS</QtInstall>
     <QtModules>core;gui;widgets;multimedia;multimediawidgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
     <QtPlugin>true</QtPlugin>
@@ -51,9 +77,10 @@
     <QtOptionsBuildLog>true</QtOptionsBuildLog>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
-    <QtInstall>5.15 LTS</QtInstall>
-    <QtModules>core;gui;widgets;multimedia;multimediawidgets</QtModules>
+    <QtInstall>6.9.1_msvc2022_64</QtInstall>
+    <QtModules>core;gui;multimedia;widgets;multimediawidgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
+    <QtExcludedOptions>-Wno-deprecated-declarations</QtExcludedOptions>
   </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
     <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
@@ -64,6 +91,10 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(QtMsBuild)\Qt.props" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_QT5|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(QtMsBuild)\Qt.props" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(QtMsBuild)\Qt.props" />
@@ -71,9 +102,43 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_QT5|x64'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
   </PropertyGroup>
+  <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Release_QT5|x64'">
+    <QtInstall>5.15 LTS</QtInstall>
+    <QtModules>core;gui;multimedia;widgets;multimediawidgets</QtModules>
+    <QtDeploy>false</QtDeploy>
+    <QtDeployDebugRelease>false</QtDeployDebugRelease>
+    <QtDeployPdb>false</QtDeployPdb>
+    <QtDeployForce>false</QtDeployForce>
+    <QtDeployNoPatchQt>false</QtDeployNoPatchQt>
+    <QtDeployNoPlugins>false</QtDeployNoPlugins>
+    <QtDeployNoLibraries>false</QtDeployNoLibraries>
+    <QtDeployQmlDir>$(ProjectDir)</QtDeployQmlDir>
+    <QtDeployNoQuickImport>false</QtDeployNoQuickImport>
+    <QtDeployNoTranslations>false</QtDeployNoTranslations>
+    <QtDeployNoSystemD3dCompiler>false</QtDeployNoSystemD3dCompiler>
+    <QtDeployNoVirtualKeyboard>false</QtDeployNoVirtualKeyboard>
+    <QtDeployCompilerRuntime>false</QtDeployCompilerRuntime>
+    <QtDeployWebkit2>false</QtDeployWebkit2>
+    <QtDeployAngle>false</QtDeployAngle>
+    <QtDeployNoOpenglSw>false</QtDeployNoOpenglSw>
+    <QtDeployVsContent>false</QtDeployVsContent>
+    <QtToolsDesignTime>true</QtToolsDesignTime>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <TranslateIncludes>false</TranslateIncludes>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>D:\Qt\6.8.3\qt-6.8.3-install\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>"$(QTDIR)\bin\windeployqt.exe" "$(OutDir.TrimEnd('\'))"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_QT5|x64'">
     <ClCompile>
       <TranslateIncludes>false</TranslateIncludes>
     </ClCompile>
@@ -89,7 +154,30 @@
       <Command>"$(QTDIR)\bin\windeployqt.exe" "$(OutDir.TrimEnd('\'))"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_QT5|x64'">
+    <PostBuildEvent>
+      <Command>"$(QTDIR)\bin\windeployqt.exe" "$(OutDir.TrimEnd('\'))"</Command>
+    </PostBuildEvent>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_QT5|x64'" Label="Configuration">
     <ClCompile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <WarningLevel>Level3</WarningLevel>
@@ -104,7 +192,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
     <ClCompile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>

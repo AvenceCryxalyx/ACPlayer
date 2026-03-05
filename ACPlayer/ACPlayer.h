@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QtWidgets>
-#include <QtMultimediaWidgets/qvideowidget.h>
 #include <QMediaPlayer>
 #include <QtMultimediaWidgets>
 #include <QtCore>
@@ -42,14 +41,17 @@ public slots:
     void MediaError(QMediaPlayer::Error);
 private:
     Ui::ACPlayerClass ui;
-    QMediaPlayer* Player;
-    QGraphicsView* view;
-    QGraphicsScene* scene;
-    QGraphicsVideoItem* Video;
-    QAudioOutput* Audio;
+    QMediaPlayer* Player = nullptr;
+    QGraphicsView* view = nullptr;
+    QGraphicsScene* scene = nullptr;
+    QGraphicsVideoItem* Video = nullptr;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QAudioOutput* Audio = nullptr;
+#endif
     qint64 mDuration;
     bool Is_Paused = true;
     bool Is_Muted = false;
+    bool isInitialized = false;
     void resizeEvent(QResizeEvent* event) override;
     void updateProgressPosition(qint64 duration);
 
