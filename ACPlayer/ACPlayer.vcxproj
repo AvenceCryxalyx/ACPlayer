@@ -61,8 +61,8 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
-    <QtInstall>6.9.1_msvc2022_64</QtInstall>
-    <QtModules>core;gui;widgets;multimedia;multimediawidgets</QtModules>
+    <QtInstall>6.8.3 win7/8 support</QtInstall>
+    <QtModules>core;serialport;gui;widgets;multimedia;multimediawidgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
     <QtPlugin>true</QtPlugin>
     <QtQMLDebugEnable>false</QtQMLDebugEnable>
@@ -70,7 +70,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_QT5|x64'" Label="QtSettings">
     <QtInstall>5.15 LTS</QtInstall>
-    <QtModules>core;gui;widgets;multimedia;multimediawidgets</QtModules>
+    <QtModules>core;serialport;gui;widgets;multimedia;multimediawidgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
     <QtPlugin>true</QtPlugin>
     <QtQMLDebugEnable>false</QtQMLDebugEnable>
@@ -78,7 +78,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>6.9.1_msvc2022_64</QtInstall>
-    <QtModules>core;gui;multimedia;widgets;multimediawidgets</QtModules>
+    <QtModules>core;serialport;gui;multimedia;widgets;multimediawidgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
     <QtExcludedOptions>-Wno-deprecated-declarations</QtExcludedOptions>
   </PropertyGroup>
@@ -107,7 +107,7 @@
   </PropertyGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Release_QT5|x64'">
     <QtInstall>5.15 LTS</QtInstall>
-    <QtModules>core;gui;multimedia;widgets;multimediawidgets</QtModules>
+    <QtModules>core;serialport;gui;multimedia;widgets;serialport;multimediawidgets</QtModules>
     <QtDeploy>false</QtDeploy>
     <QtDeployDebugRelease>false</QtDeployDebugRelease>
     <QtDeployPdb>false</QtDeployPdb>
@@ -127,12 +127,18 @@
     <QtDeployVsContent>false</QtDeployVsContent>
     <QtToolsDesignTime>true</QtToolsDesignTime>
   </PropertyGroup>
+  <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='All|x64'">
+    <QtModules>core;serialport;</QtModules>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <TranslateIncludes>false</TranslateIncludes>
+      <AdditionalIncludeDirectories>D:\Repositories\ACPlayer\ACPlayer\ACPlayer\Externals\UART;%(AdditionalIncludeDirectories);D:\Repositories\ACPlayer\ACPlayer\ACPlayer\Externals\UART</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;%(PreprocessorDefinitions);UARTLIB_API</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>D:\Qt\6.8.3\qt-6.8.3-install\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\Qt\6.8.3\qt-6.8.3-install\lib;D:\Repositories\ACPlayer\ACPlayer\ACPlayer\Externals\UART;%(AdditionalLibraryDirectories);D:\Repositories\ACPlayer\ACPlayer\ACPlayer\Externals\UART;D:\Repositories\ACPlayer\ACPlayer\ACPlayer\Externals\UART;UARTLibrary.lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>UARTLibrary.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>"$(QTDIR)\bin\windeployqt.exe" "$(OutDir.TrimEnd('\'))"</Command>
@@ -141,9 +147,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_QT5|x64'">
     <ClCompile>
       <TranslateIncludes>false</TranslateIncludes>
+      <AdditionalIncludeDirectories>;D:\Repositories\ACPlayer\ACPlayer\ACPlayer\Externals\UART</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;%(PreprocessorDefinitions);UARTLIB_API</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>D:\Qt\6.8.3\qt-6.8.3-install\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\Qt\6.8.3\qt-6.8.3-install\lib;%(AdditionalLibraryDirectories);D:\Repositories\ACPlayer\ACPlayer\ACPlayer\Externals\UART;D:\Repositories\ACPlayer\ACPlayer\ACPlayer\Externals\UART;UARTLibrary.lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>UARTLibrary.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>"$(QTDIR)\bin\windeployqt.exe" "$(OutDir.TrimEnd('\'))"</Command>
@@ -151,18 +160,26 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PostBuildEvent>
-      <Command>"$(QTDIR)\bin\windeployqt.exe" "$(OutDir.TrimEnd('\'))"</Command>
+      <Command>"$(QTDIR)\bin\windeployqt.exe" "$(OutDir.TrimEnd('\'))"
+xcopy /y /d "D:\Repositories\SerialPort DLL\x64\Release\UARTLibrary.dll" "$(OutDir.TrimEnd('\'))"</Command>
     </PostBuildEvent>
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\Repositories\ACPlayer\ACPlayer\ACPlayer\Externals\UART;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_QT5|x64'">
     <PostBuildEvent>
-      <Command>"$(QTDIR)\bin\windeployqt.exe" "$(OutDir.TrimEnd('\'))"</Command>
+      <Command>"$(QTDIR)\bin\windeployqt.exe" "$(OutDir.TrimEnd('\'))"
+xcopy /y /d "D:\Repositories\SerialPort DLL\x64\Release\UARTLibrary.dll" "$(OutDir.TrimEnd('\'))"</Command>
     </PostBuildEvent>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>UARTLibrary.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\Repositories\ACPlayer\ACPlayer\ACPlayer\Externals\UART;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>D:\Repositories\ACPlayer\ACPlayer\ACPlayer\Externals\UART;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
@@ -206,15 +223,27 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="RealTimeSerialWorker.cpp" />
     <QtRcc Include="ACPlayer.qrc" />
     <QtUic Include="ACPlayer.ui" />
     <QtMoc Include="ACPlayer.h" />
     <ClCompile Include="ACPlayer.cpp" />
+    <ClCompile Include="ComportConnectionDialog.cpp" />
+    <ClCompile Include="CustomVideoItem.cpp" />
+    <ClCompile Include="Events.cpp" />
+    <ClCompile Include="FramerateThrottler.cpp" />
     <ClCompile Include="LogEntry.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp" />
+    <QtUic Include="ComportConnectionDialog.ui" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="CustomVideoItem.h" />
+    <ClInclude Include="Events.h" />
+    <QtMoc Include="FramerateThrottler.h" />
+    <QtMoc Include="RealTimeSerialWorker.h" />
+    <ClInclude Include="x64\Release_QT5\qt\uic\ui_ComportConnectionDialog.h" />
+    <QtMoc Include="ComportConnectionDialog.h" />
     <ClInclude Include="LogEntry.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="x64\Debug\qt\uic\ui_ACPlayer.h" />

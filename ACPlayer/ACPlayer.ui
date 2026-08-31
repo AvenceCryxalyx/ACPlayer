@@ -44,7 +44,7 @@
      <height>9</height>
     </size>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0">
+   <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0,0">
     <item>
      <widget class="QGroupBox" name="groupBox_Video">
       <property name="enabled">
@@ -392,6 +392,13 @@
       </item>
      </layout>
     </item>
+    <item>
+     <widget class="QLabel" name="comport_connection_label">
+      <property name="text">
+       <string>No Comport Connection</string>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -409,7 +416,15 @@
     </property>
     <addaction name="actionOpen"/>
    </widget>
+   <widget class="QMenu" name="menuSerial_Port">
+    <property name="title">
+     <string>Serial Port</string>
+    </property>
+    <addaction name="actionOpen_Connection"/>
+    <addaction name="actionClose_Connection"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuSerial_Port"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -423,6 +438,16 @@
   <action name="actionOpen">
    <property name="text">
     <string>Open</string>
+   </property>
+  </action>
+  <action name="actionOpen_Connection">
+   <property name="text">
+    <string>Open Connection</string>
+   </property>
+  </action>
+  <action name="actionClose_Connection">
+   <property name="text">
+    <string>Close Connection</string>
    </property>
   </action>
  </widget>

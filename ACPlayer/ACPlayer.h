@@ -5,7 +5,15 @@
 #include <QtMultimediaWidgets>
 #include <QtCore>
 #include <QtGui>
+#include <QtSerialPort>
+#include <QTimer>
+#include <QElapsedTimer>
 #include "ui_ACPlayer.h"
+#include "ui_ComportConnectionDialog.h"
+#include "UARTLibrary.h"
+#include "ComportConnectionDialog.h"
+#include "CustomVideoItem.h"
+#include "RealTimeSerialWorker.h"
 
 class ACPlayer : public QMainWindow
 {
@@ -16,6 +24,9 @@ public:
     ~ACPlayer();
     void OpenWithFile(QString* fileName);
     void PlayVideo(QString* fileName);
+    void OpenComportSelection();
+    void CloseComportConnection();
+
 private slots:
     void durationChanged(qint64 duration);
     void positionChanged(qint64 duration);
@@ -25,6 +36,7 @@ private slots:
     void on_prevPressed();
     void on_stopPressed();
     void on_muteToggled();
+    void on_sendDataToConnectedDevice();
     void on_hSlider_Volume_valueChanged(int value);
     void on_hSlider_Progress_valueChanged(int value);
     void on_QPlayer_durationChanged(qint64 position);
@@ -40,14 +52,26 @@ public slots:
     void ChangedStatus(QMediaPlayer::MediaStatus);
     void MediaError(QMediaPlayer::Error);
 private:
+    QSerialPort serialPort;
+    RealTimeSerialWorker* port;
+    ComportConnectionDialog* comportDialog;
     Ui::ACPlayerClass ui;
     QMediaPlayer* Player = nullptr;
     QGraphicsView* view = nullptr;
     QGraphicsScene* scene = nullptr;
     QGraphicsVideoItem* Video = nullptr;
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    QVideoProbe* probe;
+#elif QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QVideoSink* sink;
     QAudioOutput* Audio = nullptr;
 #endif
+    double frameRate;
+    QTime CurrentVidTime;
+    QTimer sendDataTimer;
+    QElapsedTimer offset;
+    qint64 lastVideoPosition = 0;
+
     qint64 mDuration;
     bool Is_Paused = true;
     bool Is_Muted = false;

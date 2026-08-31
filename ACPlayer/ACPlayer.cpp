@@ -1,4 +1,5 @@
 #include "ACPlayer.h"
+#include "FramerateThrottler.h"
 
 ACPlayer::ACPlayer(QWidget *parent)
     : QMainWindow(parent)
@@ -6,15 +7,17 @@ ACPlayer::ACPlayer(QWidget *parent)
     ui.setupUi(this);
 
     Player = new QMediaPlayer();
-    Video = new QGraphicsVideoItem();
+    Video = new CustomVideoItem();
     Video->setPos(0, 0);
-
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     view = new QGraphicsView(ui.groupBox_Video);
     scene = new QGraphicsScene(ui.groupBox_Video);
 #elif QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     scene = new QGraphicsScene(this);
     view = new QGraphicsView();
+    // 2. Instantiate your throttler and pass it the target videoItem
+    FramerateThrottler* throttler = new FramerateThrottler(Video, this);
+    throttler->setTargetFps(30);
     //qDebug() << "View created:" << (void*)view;
     //qDebug() << "View valid:" << view->isVisible();
 #endif
@@ -48,7 +51,7 @@ ACPlayer::ACPlayer(QWidget *parent)
     Video->setSize(view->size());
     view->show();
     Player->setVideoOutput(Video);
-    
+    Player->setNotifyInterval(1);
     ui.pushButton_Play->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
     ui.pushButton_Stop->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
     ui.pushButton_Next->setIcon(style()->standardIcon(QStyle::SP_MediaSeekForward));
@@ -68,6 +71,8 @@ ACPlayer::ACPlayer(QWidget *parent)
     connect(Player, &QMediaPlayer::durationChanged, this, &ACPlayer::durationChanged);
     connect(Player, &QMediaPlayer::positionChanged, this, &ACPlayer::positionChanged);
     connect(Player, &QMediaPlayer::positionChanged, this, &ACPlayer::updateProgressPosition);
+    connect(ui.actionOpen_Connection, &QAction::triggered, this, &ACPlayer::OpenComportSelection);
+    //connect(&m_timer, &QTimer::timeout, this, )
     
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     connect(Player, & QMediaPlayer::metaDataChanged, this, &ACPlayer::on_metaChanged);
@@ -115,7 +120,13 @@ void ACPlayer::on_metaChanged()
             Video->setRotation(0);
         }
     }
+    QVariant fps = Player->metaData("FrameRate");
+    if (fps.isValid())
+    {
+        frameRate = fps.toDouble();
+    }
 #endif
+
 
 }
 
@@ -223,6 +234,39 @@ void ACPlayer::on_hSlider_Volume_valueChanged(int value)
 #endif
 }
 
+void ACPlayer::on_sendDataToConnectedDevice()
+{
+    if (!serialPort.isOpen())
+        return;
+
+    QByteArray dataArray;
+    dataArray.resize(13);
+    int cmdType = 0;
+
+    switch (Player->state())
+    {
+    case QMediaPlayer::StoppedState:
+        cmdType = 1;
+    case QMediaPlayer::PlayingState:
+        cmdType = 2;
+    case QMediaPlayer::PausedState:
+        cmdType = 3;
+        break;
+    default:
+        break;
+    }
+
+    dataArray[0] = 0xCC;
+    dataArray[1] = cmdType;
+    dataArray[2] = frameRate;
+    dataArray[3] = CurrentVidTime.hour();
+    dataArray[4] = CurrentVidTime.minute();
+    dataArray[5] = CurrentVidTime.second();
+    dataArray[6] = CurrentVidTime.msec();
+    dataArray[7] = 0xAA;
+    serialPort.write(dataArray, dataArray.size());
+}
+
 void ACPlayer::on_QPlayer_durationChanged(qint64 position)
 {
 
@@ -327,8 +371,8 @@ void ACPlayer::updateProgressPosition(qint64 duration)
         int formatDividend2 = millisecondsPerSecond * secondsPerMinute;
         int formatDividend3 = millisecondsPerSecond * secondsPerMinute * minutesPerHour;
 
-        QTime CurrentTime((duration/ formatDividend3), (duration / formatDividend2) % 60,(duration / formatDividend1) % 60);
-        
+        QTime CurrentTime((duration/ formatDividend3), (duration / formatDividend2) % 60,(duration / formatDividend1) % 60, duration % 1000);
+        CurrentVidTime = CurrentTime;
         QString Format = "hh:mm:ss";
         if (mDuration <= 3600)
         {
@@ -336,6 +380,7 @@ void ACPlayer::updateProgressPosition(qint64 duration)
         }
         ui.label_time_elapsed->setText(CurrentTime.toString(Format));
     }
+    on_sendDataToConnectedDevice();
 }
 
 void ACPlayer::ChangedStatus(QMediaPlayer::MediaStatus status)
@@ -347,4 +392,21 @@ void ACPlayer::ChangedStatus(QMediaPlayer::MediaStatus status)
 void ACPlayer::MediaError(QMediaPlayer::Error error)
 {
 
+}
+
+void ACPlayer::OpenComportSelection()
+{
+    if (comportDialog == nullptr)
+    {
+        comportDialog = new ComportConnectionDialog(&serialPort, this);
+    }
+    comportDialog->Initialize();
+    comportDialog->show();
+}
+
+void ACPlayer::CloseComportConnection()
+{
+    if (serialPort.isOpen()) {
+        serialPort.close();
+    }
 }
