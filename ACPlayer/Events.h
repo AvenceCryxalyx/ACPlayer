@@ -9,10 +9,10 @@ class Events
 {
 public:
     ~Events();
-    void AddListener(std::function<void()> callback);
-    void Invoke();
+    void AddListener(const std::function<void(int)>& callback);
+    void Invoke(int number);
 
 private:
-    vector<function<void()>> listeners;
+    vector<function<void(int)>> listeners;
 };
 

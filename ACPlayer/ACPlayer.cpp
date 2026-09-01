@@ -399,9 +399,18 @@ void ACPlayer::OpenComportSelection()
     if (comportDialog == nullptr)
     {
         comportDialog = new ComportConnectionDialog(&serialPort, this);
+        comportDialog->onConnectionSuccess.AddListener([this](int num) {
+            this->OnSerialPortConnected();
+            });
     }
     comportDialog->Initialize();
     comportDialog->show();
+}
+
+void ACPlayer::OnSerialPortConnected()
+{
+    QString connectionString = "Conencted " + serialPort.portName();
+    ui.comport_connection_label->setText(connectionString);
 }
 
 void ACPlayer::CloseComportConnection()

@@ -5,12 +5,12 @@ Events::~Events()
     listeners.clear();
 }
 
-void Events::AddListener(std::function<void()> callback) {
+void Events::AddListener(const std::function<void(int)>& callback) {
     listeners.push_back(callback);
 }
 
-void Events::Invoke() {
+void Events::Invoke(int number) {
     for (const auto& callback : listeners) {
-        callback();
+        callback(number);
     }
 }

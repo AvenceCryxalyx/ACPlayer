@@ -38,7 +38,7 @@ private:
         bool present(const QVideoFrame& frame) override {
             frameCount++;
             if (frameCount >= targetFrames) {
-                EvtFrameIntervalTriggered->Invoke();
+                EvtFrameIntervalTriggered->Invoke(frameCount);
                 frameCount = 0;
             }
             return m_item->videoSurface()->present(frame);

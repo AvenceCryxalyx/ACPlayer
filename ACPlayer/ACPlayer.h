@@ -51,10 +51,12 @@ signals:
 public slots:
     void ChangedStatus(QMediaPlayer::MediaStatus);
     void MediaError(QMediaPlayer::Error);
+public:
+    void OnSerialPortConnected();
 private:
     QSerialPort serialPort;
-    RealTimeSerialWorker* port;
     ComportConnectionDialog* comportDialog;
+    RealTimeSerialWorker* worker;
     Ui::ACPlayerClass ui;
     QMediaPlayer* Player = nullptr;
     QGraphicsView* view = nullptr;
@@ -78,6 +80,8 @@ private:
     bool isInitialized = false;
     void resizeEvent(QResizeEvent* event) override;
     void updateProgressPosition(qint64 duration);
+
+    
 
     const int millisecondsPerSecond = 1000;
     const int secondsPerMinute = 60;

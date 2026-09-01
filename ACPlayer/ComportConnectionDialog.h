@@ -8,16 +8,19 @@
 #include <QtSerialPort>
 #include <QIODevice>
 #include <QSerialPortInfo>
+#include "Events.h"
 
 using namespace std;
 class ComportConnectionDialog : public QDialog
 {
 	Q_OBJECT
 public:
-	ComportConnectionDialog(QSerialPort* portConnection, QWidget* parent = nullptr);
+	ComportConnectionDialog(QSerialPort* portConnection, QWidget* parent);
 	~ComportConnectionDialog();
 	bool OpenComport();
 	void Initialize();
+	Events onConnectionSuccess;
+	Events onConnectionFailed;
 private:
 	QSerialPort* port;
 	Ui_ComportConnectionDialog ui;
