@@ -2,12 +2,12 @@
 #include "FramerateThrottler.h"
 
 ACPlayer::ACPlayer(QWidget *parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent), serialThread(nullptr), worker(nullptr), frameRate(30), mDuration(0)
 {
     ui.setupUi(this);
-
+    serialThread = new QThread(this);
     Player = new QMediaPlayer();
-    Video = new CustomVideoItem();
+    Video = new QGraphicsVideoItem();
     Video->setPos(0, 0);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     view = new QGraphicsView(ui.groupBox_Video);
@@ -15,11 +15,6 @@ ACPlayer::ACPlayer(QWidget *parent)
 #elif QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     scene = new QGraphicsScene(this);
     view = new QGraphicsView();
-    // 2. Instantiate your throttler and pass it the target videoItem
-    FramerateThrottler* throttler = new FramerateThrottler(Video, this);
-    throttler->setTargetFps(30);
-    //qDebug() << "View created:" << (void*)view;
-    //qDebug() << "View valid:" << view->isVisible();
 #endif
 
 
@@ -41,6 +36,7 @@ ACPlayer::ACPlayer(QWidget *parent)
     QVBoxLayout* layout = new QVBoxLayout(ui.groupBox_Video);
     layout->setContentsMargins(0, 0, 0, 0);  
     layout->addWidget(view);
+    
     view->setScene(scene);
     view->setGeometry(0, 0, ui.groupBox_Video->width(), ui.groupBox_Video->height());
     view->updateGeometry();
@@ -48,10 +44,10 @@ ACPlayer::ACPlayer(QWidget *parent)
     view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     view->scene()->addItem(Video);
     view->fitInView(scene->sceneRect());
-    Video->setSize(view->size());
     view->show();
+    Video->setSize(view->size());
     Player->setVideoOutput(Video);
-    Player->setNotifyInterval(1);
+    Player->setNotifyInterval(10);
     ui.pushButton_Play->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
     ui.pushButton_Stop->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
     ui.pushButton_Next->setIcon(style()->standardIcon(QStyle::SP_MediaSeekForward));
@@ -72,7 +68,6 @@ ACPlayer::ACPlayer(QWidget *parent)
     connect(Player, &QMediaPlayer::positionChanged, this, &ACPlayer::positionChanged);
     connect(Player, &QMediaPlayer::positionChanged, this, &ACPlayer::updateProgressPosition);
     connect(ui.actionOpen_Connection, &QAction::triggered, this, &ACPlayer::OpenComportSelection);
-    //connect(&m_timer, &QTimer::timeout, this, )
     
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     connect(Player, & QMediaPlayer::metaDataChanged, this, &ACPlayer::on_metaChanged);
@@ -85,13 +80,10 @@ ACPlayer::ACPlayer(QWidget *parent)
 
 ACPlayer::~ACPlayer()
 {
-    delete view;
-    delete Video;
-    delete scene;
-    delete Player;
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    delete Audio;
-#endif
+    if (serialThread && serialThread->isRunning()) {
+        serialThread->quit();
+        serialThread->wait();
+    }
 }
 
 void ACPlayer::on_metaChanged()
@@ -234,11 +226,21 @@ void ACPlayer::on_hSlider_Volume_valueChanged(int value)
 #endif
 }
 
-void ACPlayer::on_sendDataToConnectedDevice()
+void ACPlayer::on_sendDataToConnectedDevice(qint64 ms)
 {
-    if (!serialPort.isOpen())
+    
+    if (!serialThread)
         return;
-
+    cout << "hello" << endl;
+    if (!serialThread->isRunning())
+        return;
+    cout << "halo" << endl;
+    if (!worker)
+        return;
+    cout << "hi" << endl;
+    if (!worker->IsOpen())
+        return;
+    cout << "ina mo" << endl;
     QByteArray dataArray;
     dataArray.resize(13);
     int cmdType = 0;
@@ -255,16 +257,17 @@ void ACPlayer::on_sendDataToConnectedDevice()
     default:
         break;
     }
-
-    dataArray[0] = 0xCC;
-    dataArray[1] = cmdType;
-    dataArray[2] = frameRate;
-    dataArray[3] = CurrentVidTime.hour();
-    dataArray[4] = CurrentVidTime.minute();
-    dataArray[5] = CurrentVidTime.second();
-    dataArray[6] = CurrentVidTime.msec();
-    dataArray[7] = 0xAA;
-    serialPort.write(dataArray, dataArray.size());
+    if(serialThread->isRunning())
+        worker->updatePlaybackState(cmdType, frameRate, ms);
+    //dataArray[0] = 0xCC;
+    //dataArray[1] = cmdType;
+    //dataArray[2] = frameRate;
+    //dataArray[3] = CurrentVidTime.hour();
+    //dataArray[4] = CurrentVidTime.minute();
+    //dataArray[5] = CurrentVidTime.second();
+    //dataArray[6] = CurrentVidTime.msec();
+    //dataArray[7] = 0xAA;
+    //serialPort.write(dataArray, dataArray.size());
 }
 
 void ACPlayer::on_QPlayer_durationChanged(qint64 position)
@@ -296,20 +299,27 @@ void ACPlayer::PlayVideo(QString* fileName)
     {
         Player->stop();
     }
-    Player->setMedia(QUrl(*fileName));
+    Player->setMedia(QUrl::fromLocalFile(*fileName));
 #endif
     QSize newSize = QSize(ui.groupBox_Video->width(), ui.groupBox_Video->height());
     QRectF bounds = ui.groupBox_Video->contentsRect();
     scene->setSceneRect(bounds);
     Video->setAspectRatioMode(Qt::KeepAspectRatio);
     view->fitInView(scene->sceneRect());
-    view->setMinimumSize(newSize);
     on_playToggled();
+    if (serialThread != nullptr && worker != nullptr)
+    {
+        if (!serialThread->isRunning())
+            serialThread->start(QThread::TimeCriticalPriority);
+    }
 }
 
 void ACPlayer::on_actionOpenTriggered()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Select Video File"), "", tr("MP4 Files (*.mp4 *.avi *.mkv *.mov *.flv *.wmv *.webm *.mov)"));
+
+    if (fileName == "")
+        return;
 
     PlayVideo(&fileName);
 }
@@ -379,8 +389,9 @@ void ACPlayer::updateProgressPosition(qint64 duration)
             Format = "mm:ss.zzz";
         }
         ui.label_time_elapsed->setText(CurrentTime.toString(Format));
+        on_sendDataToConnectedDevice(duration);
     }
-    on_sendDataToConnectedDevice();
+    
 }
 
 void ACPlayer::ChangedStatus(QMediaPlayer::MediaStatus status)
@@ -396,26 +407,48 @@ void ACPlayer::MediaError(QMediaPlayer::Error error)
 
 void ACPlayer::OpenComportSelection()
 {
-    if (comportDialog == nullptr)
-    {
-        comportDialog = new ComportConnectionDialog(&serialPort, this);
-        comportDialog->onConnectionSuccess.AddListener([this](int num) {
-            this->OnSerialPortConnected();
+    if (!comportDialog) {
+        comportDialog = new ComportConnectionDialog(nullptr, serialThread, this);
+        comportDialog->DoConnection->AddListener([this](std::string portName) {
+            connectToPort(QString::fromStdString(portName));
             });
     }
     comportDialog->Initialize();
     comportDialog->show();
 }
 
-void ACPlayer::OnSerialPortConnected()
+void ACPlayer::connectToPort(const QString& portName)
 {
-    QString connectionString = "Conencted " + serialPort.portName();
-    ui.comport_connection_label->setText(connectionString);
+    if (serialThread->isRunning()) {
+        serialThread->quit();
+        serialThread->wait();
+    }
+
+    worker = new RealTimeSerialWorker(portName);      // no parent, so it can move threads
+    worker->moveToThread(serialThread);
+
+    connect(serialThread, &QThread::started, worker, &RealTimeSerialWorker::startStreaming);
+    connect(serialThread, &QThread::finished, worker, &RealTimeSerialWorker::stopStreaming);
+    connect(serialThread, &QThread::finished, worker, &QObject::deleteLater);
+    connect(worker, &RealTimeSerialWorker::portOpened, this, &ACPlayer::onPortOpened);
+
+    ui.comport_connection_label->setText(tr("Connecting %1...").arg(portName));
+    serialThread->start(QThread::TimeCriticalPriority);
+}
+
+
+void ACPlayer::onPortOpened(bool ok, const QString& portName, const QString& error)
+{
+    ui.comport_connection_label->setText(
+        ok ? tr("Connected %1").arg(portName)
+        : tr("Failed to open %1: %2").arg(portName, error));
 }
 
 void ACPlayer::CloseComportConnection()
 {
-    if (serialPort.isOpen()) {
-        serialPort.close();
+    if (serialThread->isRunning()) {
+        serialThread->quit();
+        serialThread->wait();
     }
+    ui.comport_connection_label->setText(tr("Disconnected"));
 }

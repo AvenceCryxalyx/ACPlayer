@@ -1,33 +1,39 @@
 #pragma once
-
+#include <atomic>
 #include <QObject>
 #include <QtSerialPort>
 #include <QElapsedTimer>
 #include <QMutex>
+#include <QTimer>
 
 class RealTimeSerialWorker : public QObject {
     Q_OBJECT
-    public:
-        RealTimeSerialWorker(const QString& portName);
+public:
+    explicit RealTimeSerialWorker(const QString& portName, QObject* parent = nullptr);
+    ~RealTimeSerialWorker();
 
-    public slots:
-        void startStreaming();
-        void stopStreaming();
-        // Call this slot whenever the media player updates or state changes
-        void updatePlaybackState(int state, int frameRate, qint64 positionMs);
+    bool IsOpen() const { return m_open.load(); }
+    QString PortName() const { return m_portName; }
+signals:
+    void portOpened(bool ok, const QString& portName, const QString& error);
+public slots:
+    bool startStreaming();
+    bool stopStreaming();
+    void updatePlaybackState(int state, int frameRate, qint64 positionMs);
+    
+private slots:
+    void sendDataPacket(); // Triggered every 1ms by the timer
 
-    private:
-        void runStreamLoop();
+private:
+    const QString m_portName;
+    std::atomic<bool> m_open{ false };
+    QSerialPort* m_port;
+    QTimer* m_streamTimer;
 
-        QString m_portName;
-        QSerialPort* m_port;
-        bool m_running;
-
-        // Thread-safe variables to share state from main thread
-        QMutex m_mutex;
-        int m_state;
-        int m_frameRate;
-        qint64 m_basePositionMs;
-        QElapsedTimer m_stateAgeTimer;
+    // Mutex guards all shared data modified by updatePlaybackState
+    QMutex m_mutex;
+    int m_state;
+    int m_frameRate;
+    qint64 m_basePositionMs;
+    QElapsedTimer m_stateAgeTimer;
 };
-

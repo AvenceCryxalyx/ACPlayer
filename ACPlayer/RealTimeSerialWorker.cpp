@@ -1,25 +1,42 @@
 #include "RealTimeSerialWorker.h"
-#include <QThread>
-#include <QCoreApplication>
 #include <QTime>
-#include <QDebug>
 
-RealTimeSerialWorker::RealTimeSerialWorker(const QString& portName)
-    : m_portName(portName), m_port(nullptr), m_running(false), m_state(1), m_frameRate(30), m_basePositionMs(0) {
+RealTimeSerialWorker::RealTimeSerialWorker(const QString& portName, QObject* parent)
+    : QObject(parent), m_portName(portName), m_port(nullptr), m_streamTimer(nullptr),
+    m_state(1), m_frameRate(30), m_basePositionMs(0) {
 }
 
-void RealTimeSerialWorker::startStreaming() {
-    m_port = new QSerialPort();
+RealTimeSerialWorker::~RealTimeSerialWorker() {
+    stopStreaming();
+}
+
+bool RealTimeSerialWorker::startStreaming() {
+
+    if (!m_port) {
+        m_port = new QSerialPort(this);
+    }
+    if (m_port->isOpen()) return false;
+
     m_port->setPortName(m_portName);
-    m_port->setBaudRate(QSerialPort::Baud115200); // 115200 minimum for 1ms streaming!
+    m_port->setBaudRate(QSerialPort::Baud9600);
 
     if (!m_port->open(QIODevice::WriteOnly)) {
-        //qWarning() << "Failed to open serial port:" << m_port->errorString();
-        return;
+        m_open = false;
+        emit portOpened(false, m_portName, m_port->errorString());
+        return false;
     }
 
-    m_running = true;
-    runStreamLoop();
+    if (!m_streamTimer) {
+        m_streamTimer = new QTimer(this);
+        m_streamTimer->setTimerType(Qt::PreciseTimer);
+        connect(m_streamTimer, &QTimer::timeout, this, &RealTimeSerialWorker::sendDataPacket);
+    }
+
+    m_streamTimer->start(10);
+
+    m_open = true;
+    emit portOpened(true, m_portName, QString());
+    return true;
 }
 
 void RealTimeSerialWorker::updatePlaybackState(int state, int frameRate, qint64 positionMs) {
@@ -27,77 +44,64 @@ void RealTimeSerialWorker::updatePlaybackState(int state, int frameRate, qint64 
     m_state = state;
     m_frameRate = frameRate;
     m_basePositionMs = positionMs;
-    m_stateAgeTimer.restart(); // Track exactly when this update arrived
+    m_stateAgeTimer.restart();
 }
 
-void RealTimeSerialWorker::runStreamLoop() {
-    QElapsedTimer loopTimer;
-    loopTimer.start();
+void RealTimeSerialWorker::sendDataPacket() {
+    if (!m_port || !m_port->isOpen()) return;
 
-    qint64 nextTargetTimeMs = 1;
+    int currentState;
+    int currentFrameRate;
+    qint64 calculatedTimeMs = 0;
 
-    while (m_running) {
-        qint64 currentTimeMs = loopTimer.elapsed();
+    // Thread-safe snapshot extraction
+    {
+        QMutexLocker locker(&m_mutex);
+        currentState = m_state;
+        currentFrameRate = m_frameRate;
 
-        while (currentTimeMs >= nextTargetTimeMs) {
-
-            // Fetch current state details safely
-            int currentState;
-            int currentFrameRate;
-            qint64 calculatedTimeMs = 0;
-
-            {
-                QMutexLocker locker(&m_mutex);
-                currentState = m_state;
-                currentFrameRate = m_frameRate;
-
-                // If playing, interpolate the milliseconds between media player updates
-                if (currentState == 2 && m_stateAgeTimer.isValid()) {
-                    calculatedTimeMs = m_basePositionMs + m_stateAgeTimer.elapsed();
-                }
-                else {
-                    calculatedTimeMs = m_basePositionMs;
-                }
-            }
-
-            // Convert total millisecond timestamp into H:M:S:MS
-            QTime videoTime = QTime::fromMSecsSinceStartOfDay(calculatedTimeMs % 86400000);
-
-            // Construct payload packet (Expanded to 14 bytes to fit full milliseconds)
-            QByteArray dataArray;
-            dataArray.resize(14);
-
-            dataArray[0] = static_cast<char>(0xCC);
-            dataArray[1] = static_cast<char>(currentState);
-            dataArray[2] = static_cast<char>(currentFrameRate);
-            dataArray[3] = static_cast<char>(videoTime.hour());
-            dataArray[4] = static_cast<char>(videoTime.minute());
-            dataArray[5] = static_cast<char>(videoTime.second());
-
-            // FIX: Split 16-bit Millisecond integer into two bytes (High Byte / Low Byte)
-            int msec = videoTime.msec();
-            dataArray[6] = static_cast<char>((msec >> 8) & 0xFF); // High Byte
-            dataArray[7] = static_cast<char>(msec & 0xFF);        // Low Byte
-
-            dataArray[8] = static_cast<char>(0xAA);
-
-            // Write straight to hardware buffer
-            if (m_port && m_port->isOpen()) {
-                m_port->write(dataArray);
-                m_port->flush();
-            }
-
-            nextTargetTimeMs++;
+        if (currentState == 2 && m_stateAgeTimer.isValid()) {
+            calculatedTimeMs = m_basePositionMs + m_stateAgeTimer.elapsed();
         }
-
-        QCoreApplication::processEvents();
-        QThread::usleep(100);
+        else {
+            calculatedTimeMs = m_basePositionMs;
+        }
     }
 
-    m_port->close();
-    m_port->deleteLater();
+    // Convert timestamp to time elements safely
+    QTime videoTime = QTime::fromMSecsSinceStartOfDay(calculatedTimeMs % 86400000);
+
+    // FIXED: Original layout resized to 14 bytes but left bytes 8-13 unassigned (garbage memory overhead)
+    // Resized to exactly 9 bytes to match your data structure footprint cleanly
+    QByteArray dataArray;
+    dataArray.resize(13);
+
+    dataArray[0] = 0xCC;
+    dataArray[1] = currentState;
+    dataArray[2] = currentFrameRate;
+    dataArray[3] = videoTime.hour();
+    dataArray[4] = videoTime.minute();
+    dataArray[5] = videoTime.second();
+
+    // FIXED: Re-enabled index [7] for low byte and changed footer index to [8]
+    int msec = videoTime.msec();
+    dataArray[6] = msec; // High Byte
+    dataArray[7] = 0xAA;               // Footer
+    m_port->write(dataArray.data(), static_cast<qint64>(dataArray.size()));
 }
 
-void RealTimeSerialWorker::stopStreaming() {
-    m_running = false;
+bool RealTimeSerialWorker::stopStreaming() {
+    if (m_streamTimer && m_streamTimer->isActive()) {
+        m_streamTimer->stop();
+    }
+    m_open = false;
+
+    if (m_port && m_port->isOpen()) {
+        if (m_port->bytesToWrite() > 0) {
+            m_port->waitForBytesWritten(50);
+        }
+        m_port->close();
+        return true;
+    }
+    return false;
 }

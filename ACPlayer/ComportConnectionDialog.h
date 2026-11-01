@@ -1,5 +1,4 @@
 #pragma once
-#include "D:\Qt\5.1.5LTS\5.15.2\msvc2019_64\include\QtWidgets\qwidget.h"
 #include "ui_ComportConnectionDialog.h"
 #include "UARTLibrary.h"
 #include <QtWidgets>
@@ -8,7 +7,9 @@
 #include <QtSerialPort>
 #include <QIODevice>
 #include <QSerialPortInfo>
+#include <QThread>
 #include "Events.h"
+#include "RealTimeSerialWorker.h"
 
 using namespace std;
 class ComportConnectionDialog : public QDialog
@@ -16,13 +17,16 @@ class ComportConnectionDialog : public QDialog
 	Q_OBJECT
 public:
 	ComportConnectionDialog(QSerialPort* portConnection, QWidget* parent);
+	ComportConnectionDialog(RealTimeSerialWorker* portConnection, QThread* thread, QWidget* parent);
 	~ComportConnectionDialog();
 	bool OpenComport();
 	void Initialize();
-	Events onConnectionSuccess;
-	Events onConnectionFailed;
+	Events* DoConnection;
 private:
-	QSerialPort* port;
+	QObject* m_parent;
+	QThread* m_thread;
+	QSerialPort* m_port;
+	RealTimeSerialWorker* worker;
 	Ui_ComportConnectionDialog ui;
 	void LoadComportList();
 	void FillupDropDown();

@@ -14,6 +14,9 @@
 #include "ComportConnectionDialog.h"
 #include "CustomVideoItem.h"
 #include "RealTimeSerialWorker.h"
+#include <QOpenGLWidget>
+#include <QSurfaceFormat>
+#include <QPointer>
 
 class ACPlayer : public QMainWindow
 {
@@ -25,8 +28,10 @@ public:
     void OpenWithFile(QString* fileName);
     void PlayVideo(QString* fileName);
     void OpenComportSelection();
+    void connectToPort(const QString& portName);
     void CloseComportConnection();
-
+private slots:
+    void onPortOpened(bool ok, const QString& portName, const QString& error);
 private slots:
     void durationChanged(qint64 duration);
     void positionChanged(qint64 duration);
@@ -36,7 +41,7 @@ private slots:
     void on_prevPressed();
     void on_stopPressed();
     void on_muteToggled();
-    void on_sendDataToConnectedDevice();
+    
     void on_hSlider_Volume_valueChanged(int value);
     void on_hSlider_Progress_valueChanged(int value);
     void on_QPlayer_durationChanged(qint64 position);
@@ -51,23 +56,18 @@ signals:
 public slots:
     void ChangedStatus(QMediaPlayer::MediaStatus);
     void MediaError(QMediaPlayer::Error);
-public:
-    void OnSerialPortConnected();
+//protected:
+//    void closeEvent(QCloseEvent* event) override;
 private:
     QSerialPort serialPort;
-    ComportConnectionDialog* comportDialog;
-    RealTimeSerialWorker* worker;
+    ComportConnectionDialog* comportDialog = nullptr;
+    QThread* serialThread = nullptr;
+    QPointer<RealTimeSerialWorker> worker;
     Ui::ACPlayerClass ui;
     QMediaPlayer* Player = nullptr;
     QGraphicsView* view = nullptr;
     QGraphicsScene* scene = nullptr;
     QGraphicsVideoItem* Video = nullptr;
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-    QVideoProbe* probe;
-#elif QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    QVideoSink* sink;
-    QAudioOutput* Audio = nullptr;
-#endif
     double frameRate;
     QTime CurrentVidTime;
     QTimer sendDataTimer;
@@ -80,8 +80,7 @@ private:
     bool isInitialized = false;
     void resizeEvent(QResizeEvent* event) override;
     void updateProgressPosition(qint64 duration);
-
-    
+    void on_sendDataToConnectedDevice(qint64 ms);
 
     const int millisecondsPerSecond = 1000;
     const int secondsPerMinute = 60;

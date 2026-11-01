@@ -107,7 +107,7 @@
   </PropertyGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Release_QT5|x64'">
     <QtInstall>5.15 LTS</QtInstall>
-    <QtModules>core;serialport;gui;multimedia;widgets;serialport;multimediawidgets</QtModules>
+    <QtModules>core;serialport;gui;multimedia;widgets;multimediawidgets</QtModules>
     <QtDeploy>false</QtDeploy>
     <QtDeployDebugRelease>false</QtDeployDebugRelease>
     <QtDeployPdb>false</QtDeployPdb>
@@ -125,7 +125,7 @@
     <QtDeployAngle>false</QtDeployAngle>
     <QtDeployNoOpenglSw>false</QtDeployNoOpenglSw>
     <QtDeployVsContent>false</QtDeployVsContent>
-    <QtToolsDesignTime>true</QtToolsDesignTime>
+    <QtToolsDesignTime>false</QtToolsDesignTime>
   </PropertyGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='All|x64'">
     <QtModules>core;serialport;</QtModules>
@@ -178,7 +178,7 @@ xcopy /y /d "D:\Repositories\SerialPort DLL\x64\Release\UARTLibrary.dll" "$(OutD
       <AdditionalLibraryDirectories>D:\Repositories\ACPlayer\ACPlayer\ACPlayer\Externals\UART;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level1</WarningLevel>
       <AdditionalIncludeDirectories>D:\Repositories\ACPlayer\ACPlayer\ACPlayer\Externals\UART;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
