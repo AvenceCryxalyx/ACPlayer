@@ -429,7 +429,6 @@ void ACPlayer::connectToPort(const QString& portName)
 
     connect(serialThread, &QThread::started, worker, &RealTimeSerialWorker::startStreaming);
     connect(serialThread, &QThread::finished, worker, &RealTimeSerialWorker::stopStreaming);
-    connect(serialThread, &QThread::finished, worker, &QObject::deleteLater);
     connect(worker, &RealTimeSerialWorker::portOpened, this, &ACPlayer::onPortOpened);
 
     ui.comport_connection_label->setText(tr("Connecting %1...").arg(portName));

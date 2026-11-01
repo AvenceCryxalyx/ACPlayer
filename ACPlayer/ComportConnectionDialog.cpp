@@ -37,6 +37,7 @@ ComportConnectionDialog::~ComportConnectionDialog()
 bool ComportConnectionDialog::OpenComport()
 {
 	DoConnection->Invoke(comportList[ui.comport_CB->currentIndex()].portName().toStdString());
+	
 	close();
 	return true;
 }

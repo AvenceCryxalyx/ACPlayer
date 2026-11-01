@@ -18,8 +18,8 @@ bool RealTimeSerialWorker::startStreaming() {
     if (m_port->isOpen()) return false;
 
     m_port->setPortName(m_portName);
-    m_port->setBaudRate(QSerialPort::Baud9600);
-
+    m_port->setBaudRate(QSerialPort::Baud115200);
+    m_port->setFlowControl(QSerialPort::NoFlowControl);
     if (!m_port->open(QIODevice::WriteOnly)) {
         m_open = false;
         emit portOpened(false, m_portName, m_port->errorString());
